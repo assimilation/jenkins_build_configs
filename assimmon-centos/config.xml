@@ -1,0 +1,263 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<matrix-project plugin="matrix-project@1.4">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>VERSION</name>
+          <description></description>
+          <defaultValue>tip</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>FOLDER</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>true</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <axes>
+    <hudson.matrix.LabelAxis>
+      <name>label</name>
+      <values>
+        <string>worker32-centos65</string>
+        <string>worker64-centos510</string>
+        <string>worker64-centos64</string>
+        <string>worker64-centos65</string>
+        <string>worker64-centos7</string>
+      </values>
+    </hudson.matrix.LabelAxis>
+  </axes>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>echo this is build number ${BUILD_NUMBER}
+cat /etc/issue
+uname -a
+whoami
+
+#######################################################################
+if [ &quot;${NODE_NAME}&quot; = &quot;worker64-centos510&quot; ]; then
+
+yum -y install glib2 libpcap zlib-devel rpm-build gcc make pkgconfig glib2-devel valgrind mercurial wget libpcap-devel rsyslog which tar lsof cmake28 gdbm
+
+#resource-agents
+
+wget -q http://mirror-fpt-telecom.fpt.net/fedora/epel/5/i386/epel-release-5-4.noarch.rpm -O /tmp/epel-release-5-4.noarch.rpm
+yum -y --nogpgcheck install /tmp/epel-release-5-4.noarch.rpm
+yum -y install scl-utils scl-utils-build python27
+
+scp jctong@jenkinsci:/var/cache/neo4j/neo4j-community-2.0.1-unix.tar.gz /tmp/. &amp;&amp; tar -C /opt -xzf /tmp/neo4j-community-2.0.1-unix.tar.gz &amp;&amp; ln -s /opt/neo4j-community-2.0.1/ /opt/neo4j &amp;&amp; (echo &apos;&apos;; echo &apos;&apos;) | /opt/neo4j/bin/neo4j-installer install &amp;&amp; mkdir -p /var/lib/heartbeat/lrm
+
+mkdir -p /root/assimilation/src /root/assimilation/bin &amp;&amp; hg clone http://hg.linux-ha.org/assimilation /root/assimilation/src
+
+cd /root/assimilation/src &amp;&amp; id=$(hg id --id .) &amp;&amp; mkdir -p /root/rpmbuild/SOURCES &amp;&amp; hg archive --type tgz /root/rpmbuild/SOURCES/${id}.tgz &amp;&amp; rpmbuild -ba /root/assimilation/src/docker/CentOS/assimilation-cma.spec --define=&quot;assimversion ${id}&quot;
+cd /root/assimilation/bin; /usr/bin/cmake28 ../src &amp;&amp; scl enable python27 &quot;make install&quot;
+
+hg id
+
+scl enable python27 &apos;pip install netaddr flask getent testify pylint&apos;
+scl enable python27 &apos;pip install py2neo==1.6.4&apos;
+
+adduser --shell /bin/false assimilation
+echo &apos;/usr/lib64/assimilation&apos; &gt; /etc/ld.so.conf.d/assimilation &amp;&amp; ldconfig /usr/lib64/assimilation
+
+assimcli genkeys
+
+cd /root/assimilation/src/cma &amp;&amp; (rsyslogd&amp;  /etc/init.d/neo4j-service start) &amp;&amp; scl enable python27 &apos;python --version; /usr/bin/env python --version; testify -v tests&apos;
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; md5sum *.rpm
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-nanoprobe*.rpm
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-cma*.rpm
+
+ssh jctong@jenkinsci &quot;mkdir -p /tmp/${BUILD_NUMBER}/${NODE_NAME}&quot;
+ls /root/rpmbuild/RPMS/x86_64/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/x86_64/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/RPMS/i686/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/i686/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/SRPMS/*.rpm &amp;&amp; scp /root/rpmbuild/SRPMS/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+
+
+
+fi
+
+#######################################################################
+if [ &quot;${NODE_NAME}&quot; = &quot;worker32-centos65&quot; ]; then
+
+
+yum -y install glib2 libpcap zlib-devel rpm-build gcc make pkgconfig glib2-devel valgrind resource-agents mercurial wget libpcap-devel rsyslog which tar redhat-lsb-core lsof cmake gdbm
+
+
+wget -q https://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm -O /tmp/epel-release-6-8.noarch.rpm
+yum -y install /tmp/epel-release-6-8.noarch.rpm
+wget -qO- http://dev.centos.org/centos/6/SCL/scl.repo &gt;&gt; /etc/yum.repos.d/centos.scl.repo
+yum -y install libffi.x86_64 install scl-utils scl-utils-build python27
+scl enable python27 &apos;easy_install pip&apos;
+scl enable python27 &apos;pip install ctypesgen&apos;
+  
+scp jctong@jenkinsci:/var/cache/neo4j/neo4j-community-2.0.1-unix.tar.gz /tmp/. &amp;&amp; tar -C /opt -xzf /tmp/neo4j-community-2.0.1-unix.tar.gz &amp;&amp; ln -s /opt/neo4j-community-2.0.1/ /opt/neo4j &amp;&amp; (echo &apos;&apos;; echo &apos;&apos;) | /opt/neo4j/bin/neo4j-installer install &amp;&amp; mkdir -p /var/lib/heartbeat/lrm
+
+mkdir -p /root/assimilation/src /root/assimilation/bin &amp;&amp; hg clone http://hg.linux-ha.org/assimilation /root/assimilation/src
+cd /root/assimilation/src &amp;&amp; id=$(hg id --id .) &amp;&amp; mkdir -p /root/rpmbuild/SOURCES &amp;&amp; hg archive --type tgz /root/rpmbuild/SOURCES/${id}.tgz &amp;&amp; rpmbuild -ba /root/assimilation/src/docker/CentOS/assimilation-cma.spec --define=&quot;assimversion ${id}&quot;
+cd /root/assimilation/bin; /usr/bin/cmake28 ../src &amp;&amp; scl enable python27 &quot;make install&quot;
+#EXPOSE 55604 7473 7474 1984 1337
+#ENV BROKENDNS true
+scl enable python27 &apos;pip install netaddr flask getent testify pylint&apos;
+scl enable python27 &apos;pip install py2neo==1.6.4&apos;
+
+adduser --shell /bin/false assimilation
+echo &apos;/usr/lib64/assimilation&apos; &gt; /etc/ld.so.conf.d/assimilation &amp;&amp; ldconfig /usr/lib64/assimilation
+
+assimcli genkeys
+
+cd /root/assimilation/src/cma &amp;&amp; (rsyslogd&amp;  /etc/init.d/neo4j-service start) &amp;&amp; scl enable python27 &apos;python --version; /usr/bin/env python --version; testify -v tests&apos;
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; md5sum *.rpm
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-nanoprobe*.rpm
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-cma*.rpm
+
+ssh jctong@jenkinsci &quot;mkdir -p /tmp/${BUILD_NUMBER}/${NODE_NAME}&quot;
+ls /root/rpmbuild/RPMS/x86_64/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/x86_64/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/RPMS/i686/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/i686/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/SRPMS/*.rpm &amp;&amp; scp /root/rpmbuild/SRPMS/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+
+fi
+
+#######################################################################
+if [ &quot;${NODE_NAME}&quot; = &quot;worker64-centos64&quot; ] || [ &quot;${NODE_NAME}&quot; = &quot;worker64-centos65&quot; ] ; then
+
+yum -y install glib2 libpcap zlib-devel rpm-build gcc make pkgconfig glib2-devel valgrind resource-agents mercurial wget libpcap-devel rsyslog which tar redhat-lsb-core lsof gdbm
+
+
+wget -qO- http://dev.centos.org/centos/6/SCL/scl.repo &gt;&gt; /etc/yum.repos.d/centos.scl.repo
+yum -y install libffi.x86_64 scl-utils scl-utils-build python27
+scl enable python27 &apos;easy_install pip&apos;
+scl enable python27 &apos;pip install ctypesgen&apos;
+
+yum -y update ca-certificates
+wget -q https://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm -O /tmp/epel-release-6-8.noarch.rpm
+yum -y install /tmp/epel-release-6-8.noarch.rpm
+yum -y install cmake28
+
+yum -y install ftp://mandril.creatis.insa-lyon.fr/linux/remi/enterprise/6/remi/x86_64/libsodium-last-1.0.1-1.el6.remi.x86_64.rpm
+
+yum -y install ftp://mandril.creatis.insa-lyon.fr/linux/remi/enterprise/6/remi/x86_64/libsodium-last-devel-1.0.1-1.el6.remi.x86_64.rpm
+
+scp jctong@jenkinsci:/var/cache/neo4j/neo4j-community-2.0.1-unix.tar.gz /tmp/. &amp;&amp; tar -C /opt -xzf /tmp/neo4j-community-2.0.1-unix.tar.gz &amp;&amp; ln -s /opt/neo4j-community-2.0.1/ /opt/neo4j &amp;&amp; (echo &apos;&apos;; echo &apos;&apos;) | /opt/neo4j/bin/neo4j-installer install &amp;&amp; mkdir -p /var/lib/heartbeat/lrm
+
+mkdir -p /root/assimilation/src /root/assimilation/bin &amp;&amp; hg clone http://hg.linux-ha.org/assimilation /root/assimilation/src
+cd /root/assimilation/src &amp;&amp; id=$(hg id --id .) &amp;&amp; mkdir -p /root/rpmbuild/SOURCES &amp;&amp; hg archive --type tgz /root/rpmbuild/SOURCES/${id}.tgz &amp;&amp; rpmbuild -ba /root/assimilation/src/docker/CentOS/assimilation-cma.spec --define=&quot;assimversion ${id}&quot;
+cd /root/assimilation/bin; /usr/bin/cmake28 ../src &amp;&amp; scl enable python27 &quot;make install&quot;
+
+scl enable python27 &apos;pip install netaddr flask getent testify pylint&apos;
+scl enable python27 &apos;pip install py2neo==1.6.4&apos;
+
+adduser --shell /bin/false assimilation
+echo &apos;/usr/lib64/assimilation&apos; &gt; /etc/ld.so.conf.d/assimilation &amp;&amp; ldconfig /usr/lib64/assimilation
+
+assimcli genkeys
+
+cd /root/assimilation/src/cma &amp;&amp; (rsyslogd&amp;  /etc/init.d/neo4j-service start) &amp;&amp; scl enable python27 &apos;python --version; /usr/bin/env python --version; testify -v tests&apos;
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; md5sum *.rpm
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-nanoprobe*.rpm
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-cma*.rpm
+
+ssh jctong@jenkinsci &quot;mkdir -p /tmp/${BUILD_NUMBER}/${NODE_NAME}&quot;
+ls /root/rpmbuild/RPMS/x86_64/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/x86_64/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/SRPMS/*.rpm &amp;&amp; scp /root/rpmbuild/SRPMS/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+
+  
+fi
+
+#######################################################################
+if [ &quot;${NODE_NAME}&quot; = &quot;worker64-centos7&quot; ]; then
+
+yum -y install glib2 libpcap zlib-devel rpm-build gcc make pkgconfig glib2-devel valgrind resource-agents mercurial wget libpcap-devel rsyslog which tar redhat-lsb-core lsof gdbm cmake
+
+easy_install pip
+pip install ctypesgen netaddr flask getent testify pylint
+pip install py2neo==1.6.4
+
+yum -y install ftp://mandril.creatis.insa-lyon.fr/linux/remi/enterprise/7/remi/x86_64/libsodium-1.0.2-1.el7.remi.x86_64.rpm
+yum -y install ftp://mandril.creatis.insa-lyon.fr/linux/remi/enterprise/7/remi/x86_64/libsodium-devel-1.0.2-1.el7.remi.x86_64.rpm
+
+scp jctong@jenkinsci:/var/cache/neo4j/neo4j-community-2.0.1-unix.tar.gz /tmp/. &amp;&amp; tar -C /opt -xzf /tmp/neo4j-community-2.0.1-unix.tar.gz &amp;&amp; ln -s /opt/neo4j-community-2.0.1/ /opt/neo4j &amp;&amp; (echo &apos;&apos;; echo &apos;&apos;) | /opt/neo4j/bin/neo4j-installer install &amp;&amp; mkdir -p /var/lib/heartbeat/lrm
+
+mkdir -p /root/assimilation/src /root/assimilation/bin &amp;&amp; hg clone http://hg.linux-ha.org/assimilation /root/assimilation/src
+cd /root/assimilation/src &amp;&amp; id=$(hg id --id .) &amp;&amp; mkdir -p /root/rpmbuild/SOURCES &amp;&amp; hg archive --type tgz /root/rpmbuild/SOURCES/${id}.tgz &amp;&amp; rpmbuild -ba /root/assimilation/src/docker/CentOS/assimilation-cma.spec --define=&quot;assimversion ${id}&quot;
+
+cd /root/assimilation/bin; /usr/bin/cmake ../src &amp;&amp; make install
+
+adduser --shell /bin/false assimilation
+echo &apos;/usr/lib64/assimilation&apos; &gt; /etc/ld.so.conf.d/assimilation &amp;&amp; ldconfig /usr/lib64/assimilation
+
+assimcli genkeys
+
+cd /root/assimilation/src/cma &amp;&amp; (rsyslogd&amp;  /etc/init.d/neo4j-service start) &amp;&amp; testify -v tests
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; md5sum *.rpm
+
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-nanoprobe*.rpm
+cd /root/rpmbuild/RPMS/x86_64/ &amp;&amp; yum -y install assimilation-cma*.rpm
+
+ssh jctong@jenkinsci &quot;mkdir -p /tmp/${BUILD_NUMBER}/${NODE_NAME}&quot;
+ls /root/rpmbuild/RPMS/x86_64/*.rpm &amp;&amp; scp /root/rpmbuild/RPMS/x86_64/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+ls /root/rpmbuild/SRPMS/*.rpm &amp;&amp; scp /root/rpmbuild/SRPMS/*.rpm jctong@jenkinsci:/tmp/$BUILD_NUMBER/${NODE_NAME}
+
+fi
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText>Started by</logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>false</RunIfJobSuccessful>
+          <script>echo ${NODE_NAME}&#xd;
+echo ${BUILD_NUMBER}&#xd;
+echo ${BUILD_ID}&#xd;
+ssh jctong@jenkinsci /home/jctong/scripts/jenkins-console-output-forwarder-to-gist/new.pl ${NODE_NAME} ${BUILD_NUMBER} ${JOB_NAME}&#xd;
+ssh jctong@jenkinsci /home/jctong/scripts/twitter_notifier/notifier.pl ${NODE_NAME} ${BUILD_NUMBER} ${JOB_NAME}&#xd;
+ssh jctong@jenkinsci /home/jctong/scripts/dropbox_pkg_uploader/upload.pl /tmp/${BUILD_NUMBER}/${NODE_NAME} ${FOLDER} ${NODE_NAME} ${BUILD_NUMBER}</script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.14.1">
+      <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
+        <timeoutMinutes>35</timeoutMinutes>
+      </strategy>
+      <operationList/>
+    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    <EnvInjectBuildWrapper plugin="envinject@1.89">
+      <info>
+        <propertiesContent>BROKENDNS=1</propertiesContent>
+        <loadFilesFromMaster>false</loadFilesFromMaster>
+      </info>
+    </EnvInjectBuildWrapper>
+  </buildWrappers>
+  <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
+    <runSequentially>false</runSequentially>
+  </executionStrategy>
+</matrix-project>
